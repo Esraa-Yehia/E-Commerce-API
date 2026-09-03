@@ -8,6 +8,8 @@ const morgan = require ('morgan');
 //loads env variables from .env file into app's env runtime
 require("dotenv").config();
 
+const httpStatusText = require ('./utils/httpStatusText');
+
 // connent with db
 const dbConnection =require('./config/database');
 dbConnection();
@@ -31,6 +33,17 @@ if(process.env.NODE_ENV === 'development'){
 app.get('/' , (req,res)=>{
     res.send('Our API');
 })
+
+
+//global error handler
+app.use((error , req, res, next)=>{
+    res.status(error.statusCode ||500).json({
+        status: error.statusText || httpStatusText.ERROR,
+        message: error.message,
+        code: error.statusCode ||500,
+        data: null
+    });
+});
 
 const PORT = process.env.PORT || 8000;
 app.listen (PORT, ()=>{
