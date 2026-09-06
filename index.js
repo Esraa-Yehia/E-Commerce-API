@@ -8,7 +8,9 @@ const morgan = require ('morgan');
 //loads env variables from .env file into app's env runtime
 require("dotenv").config();
 
+const globalErrorHandler = require ('./middlewares/globalErrorHandler');
 const httpStatusText = require ('./utils/httpStatusText');
+const appError = require ('./utils/appError');
 
 // connent with db
 const dbConnection =require('./config/database');
@@ -34,18 +36,29 @@ app.get('/' , (req,res)=>{
     res.send('Our API');
 })
 
+// 404 middleware for unhandled routes
+app.all('{/*all}',(req,res,next)=>{
 
-//global error handler
-app.use((error , req, res, next)=>{
-    res.status(error.statusCode ||500).json({
-        status: error.statusText || httpStatusText.ERROR,
-        message: error.message,
-        code: error.statusCode ||500,
-        data: null
-    });
+ const err = appError.create(`Can't find this route ${req.originalUrl} on this server`, 404, httpStatusText.FAIL);
+
+  next(err);
 });
 
+
+//global error handler
+app.use(globalErrorHandler);
+
 const PORT = process.env.PORT || 8000;
-app.listen (PORT, ()=>{
+const server = app.listen (PORT, ()=>{
     console.log(`App is running on port ${PORT}`);
-})
+});
+
+// handle errors outside express
+process.on('unhandledRejection', (err)=>{
+   
+    console.log(`UnhandledRejection Errors: ${err.name} | ${err.message}`);
+    server.close(()=>{
+        console.log('Shutting down...');
+        process.exit(1);
+    });
+});
