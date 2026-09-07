@@ -19,10 +19,12 @@ dbConnection();
 // parse req string to js object
 app.use(express.json());
 
-// handle routes
-// 1- category routes
+// mount routes
 const categoryRoutes = require('./routes/categories.routes');
 app.use("/api/categories", categoryRoutes);
+
+const subCategoryRoutes = require('./routes/subCategory.routes');
+app.use("/api/subcategories", subCategoryRoutes);
 
 
 
