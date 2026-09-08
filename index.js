@@ -29,6 +29,9 @@ app.use("/api/subcategories", subCategoryRoutes);
 const brandRoutes = require('./routes/brand.routes');
 app.use("/api/brands", brandRoutes);
 
+const productRoutes = require('./routes/product.routes');
+app.use("/api/products", productRoutes);
+
 
 if(process.env.NODE_ENV === 'development'){
     app.use(morgan('dev'));
