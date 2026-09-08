@@ -26,7 +26,8 @@ app.use("/api/categories", categoryRoutes);
 const subCategoryRoutes = require('./routes/subCategory.routes');
 app.use("/api/subcategories", subCategoryRoutes);
 
-
+const brandRoutes = require('./routes/brand.routes');
+app.use("/api/brands", brandRoutes);
 
 
 if(process.env.NODE_ENV === 'development'){
