@@ -3,6 +3,7 @@ const slugify = require('slugify');
 const asyncWrapper = require('../middlewares/asyncWrapper');
 const httpStatusText = require('../utils/httpStatusText');
 const appError = require('../utils/appError');
+const filterObj = require('../middlewares/filterObj');
 
 
 // @desc   Get list of subcategories
@@ -15,8 +16,9 @@ const getAllSubCategories = asyncWrapper(async(req,res,next)=>{
   const limit = query.limit * 1 || 10;
   const page = query.page * 1 || 1;
   const skip = (page - 1) * limit;
+  //console.log('req.params.categoryId :', req.params.categoryId);
 
-  const subCategories = await SubCategory.find({}).limit(limit).skip(skip);
+  const subCategories = await SubCategory.find(req.filterObj).limit(limit).skip(skip);
   //.populate({path:'category', select:'name -_id'});
 
   res.json({status:httpStatusText.SUCCESS,results:subCategories.length, page, data:{subCategories}});
@@ -28,6 +30,7 @@ const getAllSubCategories = asyncWrapper(async(req,res,next)=>{
 // @access private
 
 const createSubCategory = asyncWrapper(async(req,res)=>{
+
     const {name , category} = req.body;
     const newSubCategory = new SubCategory({
         name,
