@@ -1,5 +1,7 @@
 const {check} = require('express-validator');
 const validatorMiddleware = require('../../middlewares/validatorMiddleware');
+const Category = require('../../models/categoryModel');
+const SubCategory = require('../../models/subCategoryModel');
 
 const createProductValidator = [
   check('title')
@@ -61,15 +63,38 @@ const createProductValidator = [
     .notEmpty()
     .withMessage('Product category is required')
     .isMongoId()
-    .withMessage('Invalid category ID'),
+    .withMessage('Invalid category ID')
+    .custom(categoryId =>
+      Category.findById(categoryId).then(category => {
+        if (!category) {
+          return Promise.reject('No category for this id, please enter a valid category id');
+        }
+      })
+    ),
 
     check('subcategories')
     .optional()
     .isArray()
-    .withMessage('Product subcategories must be an array of strings')
-    .isMongoId()
-    .withMessage('Invalid subcategory ID'),
-
+    .withMessage('Product subcategories must be an array of IDs')
+    .custom((subcategoriesIds) =>
+      SubCategory.find({ _id: { $exists: true, $in: subcategoriesIds } }).then((result) => {
+        if (result.length < 1 || result.length !== subcategoriesIds.length) {
+          return Promise.reject(new Error('Invalid subcategory IDs'));
+        }
+      })
+    )
+    .custom((value, { req }) =>
+      SubCategory.find({ category: req.body.category }).then((subcategories) => {
+        const subCategoriesIdsInDB = [];
+        subcategories.forEach((subCategory) => {
+          subCategoriesIdsInDB.push(subCategory._id.toString());
+        });
+        const checker = value.every((v) => subCategoriesIdsInDB.includes(v));
+        if (!checker) {
+          return Promise.reject(new Error('Subcategories not belong to category'));
+        }
+      })
+    ),
     check('brand')
     .optional()
     .isMongoId()
